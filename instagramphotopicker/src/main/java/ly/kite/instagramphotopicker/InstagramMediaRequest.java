@@ -3,6 +3,7 @@ package ly.kite.instagramphotopicker;
 import android.os.AsyncTask;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -27,6 +28,7 @@ public class InstagramMediaRequest implements Parcelable {
 
     private static final String GENERIC_NETWORK_EXCEPTION_MESSAGE = "Failed to reach Instagram. Please check your internet connectivity and try again";
     private static final String MEDIA_URL_ENDPOINT = "https://api.instagram.com/v1/users/self/media/recent";
+    private static String tag = InstagramMediaRequest.class.getSimpleName();
 
     private AsyncTask<Void, Void, MediaResponse> requestTask;
     private final String baseURL;
@@ -113,6 +115,8 @@ public class InstagramMediaRequest implements Parcelable {
                 JSONObject images = photoJSON.getJSONObject("images");
                 JSONObject thumbnail = images.getJSONObject("thumbnail");
                 JSONObject standard = images.getJSONObject("standard_resolution");
+                String photoId = photoJSON.getString("id");
+                Log.v(tag, "Photo id " + photoId);
                 String thumbnailURL = thumbnail.getString("url");
                 String standardURL = standard.getString("url");
                 if (thumbnailURL.startsWith("http://")) {
@@ -123,9 +127,11 @@ public class InstagramMediaRequest implements Parcelable {
                     standardURL = standardURL.replace("http://", "https://");
                 }
 
-                InstagramPhoto photo = new InstagramPhoto(new URL(thumbnailURL), new URL(standardURL));
+                InstagramPhoto photo = new InstagramPhoto(new URL(thumbnailURL), new URL(standardURL), photoId);
                 photos.add(photo);
-            } catch (Exception ex) { /* ignore */ }
+            } catch (Exception ex) { /* ignore */
+                ex.printStackTrace();
+            }
         }
 
         return photos;
